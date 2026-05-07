@@ -1,5 +1,5 @@
 {
-  "name": "express-graphql-auth",
+  "name": "kilimo-ai-api",
   "version": "1.0.0",
   "description": "Express.js GraphQL API with Prisma and JWT authentication",
   "main": "dist/index.js",

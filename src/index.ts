@@ -58,7 +58,6 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
     console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
-    console.log(`Apollo Studio Sandbox: http://localhost:${PORT}/graphql`);
   });
 }
 

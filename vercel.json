@@ -2,7 +2,6 @@
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
   "framework": "express",
-  "nodeVersion": "20.x",
   "env": {
     "JWT_SECRET": "@JWT_SECRET"
   }

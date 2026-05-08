@@ -50,7 +50,6 @@ async function startServer() {
     expressMiddleware(apolloServer, {
       context: async ({ req }) => ({
         userId: (req as AuthRequest).userId,
-        user: (req as AuthRequest).user,
       } as GraphQLContext),
     })
   );

@@ -96,6 +96,46 @@ export interface Lender {
   type: string;
 }
 
+// ---------------------------------------------------------------------------
+// Matching results (see src/services/MatchingService.ts).
+// ---------------------------------------------------------------------------
+
+/** A dimension on which the farmer satisfies a product's requirement. */
+export interface MatchReason {
+  /** "crop" | "region" | "season" */
+  dimension: string;
+  /** The farmer's values that matched the product's requirement. */
+  matched: string[];
+}
+
+/** A required dimension the farmer does NOT yet satisfy (the "qualify-yet" path). */
+export interface MatchGap {
+  /** "crop" | "region" | "season" */
+  dimension: string;
+  /** What the product requires on this dimension. */
+  required: string[];
+}
+
+/** One loan product evaluated against a farmer, with the reasons it (nearly) fits. */
+export interface ProductMatch {
+  product: LoanProduct;
+  lender: Lender;
+  /** True when every required dimension is satisfied. */
+  qualifies: boolean;
+  /** Higher is a better fit; used for ranking. */
+  fitScore: number;
+  /** Why the farmer qualifies (matched dimensions). */
+  reasons: MatchReason[];
+  /** What the farmer would need to change to qualify (empty when `qualifies`). */
+  gaps: MatchGap[];
+  /** Risk categories the product is scoped to (informational, for explanations). */
+  riskCategories: string[];
+  /** The farmer has repaid at least one prior loan (a trust signal). */
+  hasRepaymentHistory: boolean;
+  /** The lender operates in the farmer's region. */
+  lenderInRegion: boolean;
+}
+
 export interface GraphQLContext {
   userId?: string;
   user?: User;

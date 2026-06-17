@@ -31,46 +31,97 @@ prisma/
 └── migrations/        # Database migrations
 ```
 
+## Quick Start
+
+For the impatient — the full sequence that takes you from a fresh clone to a
+running server (each step is explained in detail below):
+
+```bash
+corepack enable pnpm            # makes the `pnpm` command available
+git clone <repository-url> kilimoai-api && cd kilimoai-api
+pnpm install                    # if it warns about "Ignored build scripts", see step 3
+cp .env.example .env            # then edit .env and set a strong JWT_SECRET
+pnpm exec prisma migrate dev    # creates dev.db and applies migrations
+pnpm dev                        # http://localhost:4000/graphql
+```
+
 ## Installation
 
 ### Prerequisites
-- Node.js 18+ 
-- pnpm (or npm/yarn)
+
+- **Node.js 18+** (developed and tested on Node 20–24)
+- **pnpm 9+** — this repo is pinned to pnpm. The easiest way to get it is
+  Corepack, which ships with Node:
+  ```bash
+  corepack enable pnpm
+  ```
+  (Alternatively: `npm install -g pnpm`.)
 
 ### Setup
 
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd express-graphql-auth
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url> kilimoai-api
+   cd kilimoai-api
+   ```
 
-2. Install dependencies
-```bash
-pnpm install
-```
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
 
-3. Generate Prisma Client
-```bash
-pnpm exec prisma generate
-```
+3. **Approve native build scripts (pnpm 10+ only)**
 
-4. Create the database
-```bash
-pnpm exec prisma migrate dev --name init
-```
+   For security, recent pnpm versions do **not** run dependency build scripts by
+   default. If you see a message like:
 
-5. Set up environment variables
-```bash
-cp .env.example .env
-```
+   ```
+   [ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @prisma/client, prisma, esbuild, ...
+   ```
 
-Edit `.env` and set `JWT_SECRET` to a strong random string:
-```
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="your-super-secret-key-change-this"
-PORT=4000
-```
+   then Prisma's client was not generated and `tsx`/`esbuild` won't run. Approve
+   the builds once and reinstall:
+
+   ```bash
+   pnpm approve-builds        # interactive — select all and confirm
+   pnpm install
+   ```
+
+   This repo already ships a `pnpm-workspace.yaml` that allow-lists these builds
+   (`@prisma/client`, `prisma`, `@prisma/engines`, `esbuild`, `@apollo/protobufjs`),
+   so on a clean clone the scripts should run automatically. The manual step above
+   is only needed if your local pnpm still blocks them.
+
+4. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and set `JWT_SECRET` to a strong random string (min 32 chars).
+   The defaults look like this:
+
+   ```ini
+   DATABASE_URL="file:./dev.db"
+   JWT_SECRET="your-super-secret-jwt-key-change-in-production"
+   JWT_EXPIRY="7d"
+   NODE_ENV="development"
+   # Optional — server defaults to 4000 if unset
+   # PORT=4000
+   ```
+
+   Generate a strong secret with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+
+5. **Create the database**
+
+   This generates the Prisma client and applies the existing migration, creating
+   the local SQLite file (`dev.db`):
+
+   ```bash
+   pnpm exec prisma migrate dev
+   ```
+
+   (If you only want to regenerate the Prisma client without touching the DB, run
+   `pnpm exec prisma generate`.)
 
 ## Development
 
@@ -81,6 +132,21 @@ pnpm dev
 ```
 
 The server will run at `http://localhost:4000` with GraphQL endpoint at `/graphql`.
+
+### Verify it's working
+
+Open `http://localhost:4000/graphql` in your browser for the Apollo sandbox, or
+smoke-test from the terminal:
+
+```bash
+# Health check
+curl http://localhost:4000/health
+
+# Create a user
+curl -X POST http://localhost:4000/graphql \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"mutation { signup(email:\"dev@kilimo.ai\", password:\"secret123\", name:\"Dev\") { token user { id email name } } }"}'
+```
 
 ### Database Management
 
@@ -214,19 +280,29 @@ vercel
 
 ## Troubleshooting
 
+### `ERR_PNPM_IGNORED_BUILDS` / Prisma client not found
+- pnpm 10+ blocks dependency build scripts by default, so the Prisma client is
+  never generated. Run `pnpm approve-builds` (select all), then `pnpm install`.
+  See step 3 of [Setup](#setup).
+
+### `pnpm: command not found`
+- Enable it via Corepack: `corepack enable pnpm` (ships with Node 18+).
+
 ### Database Connection Issues
 - Ensure `DATABASE_URL` is set correctly in `.env`
 - Check that `dev.db` file exists in project root
-- Run `pnpm exec prisma migrate dev --name init` to create schema
+- Run `pnpm exec prisma migrate dev` to create the schema
 
 ### JWT Token Errors
 - Verify `JWT_SECRET` is set in environment
-- Check that token is sent in `Authorization: Bearer <token>` header
-- Ensure token hasn't expired (24 hours)
+- Check that the token is sent in the `Authorization: Bearer <token>` header
+- Ensure the token hasn't expired. Note: tokens are currently signed with a
+  hard-coded 24h expiry in `AuthService.ts`; the `JWT_EXPIRY` env var is not yet
+  wired up.
 
 ### Build Errors
 - Run `pnpm install` to ensure all dependencies are installed
-- Run `pnpm exec prisma generate` to generate Prisma client
+- Run `pnpm exec prisma generate` to generate the Prisma client
 - Check that all imports use `.js` extensions in compiled code
 
 ## License

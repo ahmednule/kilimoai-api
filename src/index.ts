@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
@@ -8,6 +9,7 @@ import { resolvers } from './graphql/resolvers.js';
 import { authMiddleware } from './middleware/auth.js';
 import type { AuthRequest } from './middleware/auth.js';
 import type { GraphQLContext } from './types/index.js';
+import { verifyConnection, initSchema, closeDriver } from './db/neo4j.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,6 +45,11 @@ const apolloServer = new ApolloServer({
 
 // Start Apollo Server
 async function startServer() {
+  // Fail fast if the database is unreachable, and make sure constraints exist.
+  await verifyConnection();
+  await initSchema();
+  console.log('Connected to Neo4j');
+
   await apolloServer.start();
 
   app.use(
@@ -54,13 +61,23 @@ async function startServer() {
     })
   );
 
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
     console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`);
   });
+
+  // Close the Neo4j driver cleanly on shutdown.
+  const shutdown = async () => {
+    server.close();
+    await closeDriver();
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
-startServer().catch((error) => {
+startServer().catch(async (error) => {
   console.error('Failed to start server:', error);
+  await closeDriver();
   process.exit(1);
 });

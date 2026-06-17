@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { getDriver } from '../db/neo4j.js';
 import { AuthService } from '../services/AuthService.js';
 import { GraphQLContext, SignupInput, LoginInput } from '../types/index.js';
 
-const prisma = new PrismaClient();
-const authService = new AuthService(prisma);
+const authService = new AuthService(getDriver());
 
 export const resolvers = {
   Query: {

@@ -1,32 +1,34 @@
 {
   "name": "kilimo-ai-api",
   "version": "1.0.0",
-  "description": "Express.js GraphQL API with Prisma and JWT authentication",
+  "description": "Express.js GraphQL API with Neo4j and JWT authentication",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "pnpm run prisma:generate && tsc",
+    "build": "tsc",
     "vercel-build": "pnpm run build",
     "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
     "type-check": "tsc --noEmit"
   },
-  "keywords": ["express", "graphql", "prisma", "auth"],
+  "keywords": [
+    "express",
+    "graphql",
+    "neo4j",
+    "auth"
+  ],
   "author": "ahmednule",
   "license": "MIT",
   "dependencies": {
     "@apollo/server": "^5.5.1",
     "@as-integrations/express4": "^1.1.1",
-    "@prisma/client": "^5.8.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "graphql": "^16.8.1",
     "graphql-tag": "^2.12.6",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "neo4j-driver": "^6.1.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -34,7 +36,6 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.10.6",
-    "prisma": "^5.8.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

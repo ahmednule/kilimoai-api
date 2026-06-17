@@ -17,7 +17,3 @@ node_modules
 
 # Build output
 dist/
-
-# Local SQLite database
-prisma/dev.db
-prisma/dev.db-journal

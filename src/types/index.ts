@@ -1,6 +1,12 @@
-import { User as PrismaUser } from '@prisma/client';
-
-export interface User extends PrismaUser {}
+/** A User node as stored in Neo4j (includes the hashed password). */
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface UserResponse {
   id: string;

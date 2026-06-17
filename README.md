@@ -1,48 +1,65 @@
-# Express GraphQL API with Authentication
+# Express GraphQL API with Authentication (Neo4j)
 
-A production-ready Express.js GraphQL API with Prisma ORM, JWT authentication, and TypeScript.
+A GraphQL API built with Express.js, Apollo Server 5, and a **Neo4j** graph
+database, with JWT authentication and TypeScript.
 
 ## Features
 
 - **GraphQL API** with Apollo Server 5
 - **Authentication** using JWT tokens with bcrypt password hashing
-- **Database ORM** with Prisma and SQLite
+- **Neo4j graph database** via the official `neo4j-driver`
 - **TypeScript** for type safety across the stack
 - **Express Middleware** for authentication and CORS
-- **Vercel Deployment** ready configuration
 
 ## Project Structure
 
 ```
 src/
+├── db/
+│   └── neo4j.ts       # Neo4j driver, connectivity check, schema constraints
 ├── graphql/
 │   ├── schema.ts      # GraphQL type definitions
 │   └── resolvers.ts   # GraphQL resolver implementations
 ├── services/
-│   └── AuthService.ts # Authentication business logic
+│   └── AuthService.ts # Authentication business logic (Cypher queries)
 ├── middleware/
 │   └── auth.ts        # JWT authentication middleware
 ├── types/
 │   └── index.ts       # TypeScript type definitions
 └── index.ts           # Express server entry point
-
-prisma/
-├── schema.prisma      # Prisma database schema
-└── migrations/        # Database migrations
 ```
+
+### Data model
+
+A single node label is used:
+
+```
+(:User {
+  id:        String  // UUID, unique
+  email:     String  // unique
+  name:      String
+  password:  String  // bcrypt hash
+  createdAt: String  // ISO 8601
+  updatedAt: String  // ISO 8601
+})
+```
+
+On startup the app ensures uniqueness constraints exist on `User.email` and
+`User.id` (see `src/db/neo4j.ts` → `initSchema`), so you don't need to create
+them by hand.
 
 ## Quick Start
 
-For the impatient — the full sequence that takes you from a fresh clone to a
-running server (each step is explained in detail below):
-
 ```bash
-corepack enable pnpm            # makes the `pnpm` command available
+corepack enable pnpm                       # makes the `pnpm` command available
 git clone <repository-url> kilimoai-api && cd kilimoai-api
-pnpm install                    # if it warns about "Ignored build scripts", see step 3
-cp .env.example .env            # then edit .env and set a strong JWT_SECRET
-pnpm exec prisma migrate dev    # creates dev.db and applies migrations
-pnpm dev                        # http://localhost:4000/graphql
+pnpm install
+docker run -d --name kilimo-neo4j \
+  -p 7474:7474 -p 7687:7687 \
+  -e NEO4J_AUTH=neo4j/change-this-password \
+  neo4j:5                                  # start Neo4j locally
+cp .env.example .env                       # then set NEO4J_PASSWORD + JWT_SECRET
+pnpm dev                                   # http://localhost:4000/graphql
 ```
 
 ## Installation
@@ -50,78 +67,66 @@ pnpm dev                        # http://localhost:4000/graphql
 ### Prerequisites
 
 - **Node.js 18+** (developed and tested on Node 20–24)
-- **pnpm 9+** — this repo is pinned to pnpm. The easiest way to get it is
-  Corepack, which ships with Node:
+- **pnpm 9+** — easiest via Corepack, which ships with Node:
   ```bash
   corepack enable pnpm
   ```
-  (Alternatively: `npm install -g pnpm`.)
+- **A Neo4j 5 database** — run one locally with Docker (below) or use a managed
+  instance such as [Neo4j Aura](https://neo4j.com/cloud/aura/).
 
-### Setup
+### 1. Install dependencies
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url> kilimoai-api
-   cd kilimoai-api
-   ```
+```bash
+pnpm install
+```
 
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+### 2. Start Neo4j
 
-3. **Approve native build scripts (pnpm 10+ only)**
+**Option A — Docker (recommended for local dev):**
 
-   For security, recent pnpm versions do **not** run dependency build scripts by
-   default. If you see a message like:
+```bash
+docker run -d --name kilimo-neo4j \
+  -p 7474:7474 -p 7687:7687 \
+  -e NEO4J_AUTH=neo4j/change-this-password \
+  neo4j:5
+```
 
-   ```
-   [ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @prisma/client, prisma, esbuild, ...
-   ```
+- `7687` is the Bolt protocol port the app connects to.
+- `7474` is the Neo4j Browser UI — open <http://localhost:7474> and log in with
+  `neo4j` / `change-this-password` to inspect data.
+- To persist data across container restarts, add `-v "$PWD/neo4j-data:/data"`.
 
-   then Prisma's client was not generated and `tsx`/`esbuild` won't run. Approve
-   the builds once and reinstall:
+**Option B — Neo4j Aura (managed cloud):**
 
-   ```bash
-   pnpm approve-builds        # interactive — select all and confirm
-   pnpm install
-   ```
+Create a free instance at <https://neo4j.com/cloud/aura/>. Aura gives you a
+connection URI that starts with `neo4j+s://` plus a generated password — use
+those values in `.env` below.
 
-   This repo already ships a `pnpm-workspace.yaml` that allow-lists these builds
-   (`@prisma/client`, `prisma`, `@prisma/engines`, `esbuild`, `@apollo/protobufjs`),
-   so on a clean clone the scripts should run automatically. The manual step above
-   is only needed if your local pnpm still blocks them.
+### 3. Configure environment variables
 
-4. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+cp .env.example .env
+```
 
-   Edit `.env` and set `JWT_SECRET` to a strong random string (min 32 chars).
-   The defaults look like this:
+Edit `.env`:
 
-   ```ini
-   DATABASE_URL="file:./dev.db"
-   JWT_SECRET="your-super-secret-jwt-key-change-in-production"
-   JWT_EXPIRY="7d"
-   NODE_ENV="development"
-   # Optional — server defaults to 4000 if unset
-   # PORT=4000
-   ```
+```ini
+# Neo4j connection
+NEO4J_URI="bolt://localhost:7687"     # or neo4j+s://<id>.databases.neo4j.io for Aura
+NEO4J_USER="neo4j"
+NEO4J_PASSWORD="change-this-password"
 
-   Generate a strong secret with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+# Auth
+JWT_SECRET="your-super-secret-jwt-key-change-in-production"
+JWT_EXPIRY="7d"
 
-5. **Create the database**
+# Server
+NODE_ENV="development"
+PORT=4000
+```
 
-   This generates the Prisma client and applies the existing migration, creating
-   the local SQLite file (`dev.db`):
-
-   ```bash
-   pnpm exec prisma migrate dev
-   ```
-
-   (If you only want to regenerate the Prisma client without touching the DB, run
-   `pnpm exec prisma generate`.)
+Generate a strong `JWT_SECRET` with:
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
 ## Development
 
@@ -131,12 +136,19 @@ Start the development server with hot reload:
 pnpm dev
 ```
 
-The server will run at `http://localhost:4000` with GraphQL endpoint at `/graphql`.
+On boot the server verifies the Neo4j connection and creates the required
+constraints, then logs:
+
+```
+Connected to Neo4j
+Server running at http://localhost:4000
+GraphQL endpoint: http://localhost:4000/graphql
+```
 
 ### Verify it's working
 
-Open `http://localhost:4000/graphql` in your browser for the Apollo sandbox, or
-smoke-test from the terminal:
+Open <http://localhost:4000/graphql> for the Apollo sandbox, or smoke-test from
+the terminal:
 
 ```bash
 # Health check
@@ -148,21 +160,18 @@ curl -X POST http://localhost:4000/graphql \
   -d '{"query":"mutation { signup(email:\"dev@kilimo.ai\", password:\"secret123\", name:\"Dev\") { token user { id email name } } }"}'
 ```
 
-### Database Management
+### Inspecting the database
 
-View and manage your database using Prisma Studio:
-```bash
-pnpm exec prisma studio
-```
+Open the Neo4j Browser at <http://localhost:7474> and run:
 
-Create a new migration after schema changes:
-```bash
-pnpm exec prisma migrate dev --name <migration-name>
+```cypher
+MATCH (u:User) RETURN u;
 ```
 
 ## GraphQL Operations
 
 ### Signup
+
 ```graphql
 mutation {
   signup(email: "user@example.com", password: "password123", name: "John Doe") {
@@ -177,6 +186,7 @@ mutation {
 ```
 
 ### Login
+
 ```graphql
 mutation {
   login(email: "user@example.com", password: "password123") {
@@ -191,6 +201,7 @@ mutation {
 ```
 
 ### Get Current User (requires authentication)
+
 ```graphql
 query {
   me {
@@ -201,15 +212,17 @@ query {
 }
 ```
 
-Add the token to the GraphQL request header:
+Add the token to the request headers:
+
 ```
 Authorization: Bearer <token>
 ```
 
-### Get User by ID
+### Get User by ID (requires authentication)
+
 ```graphql
 query {
-  user(id: "user-id") {
+  user(id: "00000000-0000-0000-0000-000000000000") {
     id
     email
     name
@@ -219,51 +232,37 @@ query {
 
 ## Building for Production
 
-Build the TypeScript code:
 ```bash
-pnpm run build
+pnpm run build   # compiles TypeScript to dist/
+pnpm start       # runs node dist/index.js
 ```
 
-The compiled code will be in the `dist/` directory.
+## Deployment
 
-## Deployment to Vercel
+The app connects to Neo4j over Bolt, so any host that can reach your database
+works. For a managed database, [Neo4j Aura](https://neo4j.com/cloud/aura/) is
+the simplest option.
 
-### Method 1: Using Vercel CLI
+Set these environment variables in your hosting provider:
 
-1. Install Vercel CLI
-```bash
-npm i -g vercel
-```
+- `NEO4J_URI` (e.g. `neo4j+s://<id>.databases.neo4j.io`)
+- `NEO4J_USER`
+- `NEO4J_PASSWORD`
+- `JWT_SECRET`
+- `JWT_EXPIRY` (optional, defaults to `24h`)
 
-2. Deploy
-```bash
-vercel
-```
-
-3. Set environment variables in Vercel dashboard:
-   - Go to Project Settings → Environment Variables
-   - Add `JWT_SECRET` with a strong random string
-
-### Method 2: GitHub Integration
-
-1. Push your code to GitHub
-2. Import the project in Vercel dashboard
-3. Add environment variables: `JWT_SECRET`
-4. Deploy
-
-### Important Notes for Vercel Deployment
-
-- **SQLite Database**: SQLite works with Vercel but data is ephemeral. For production, migrate to PostgreSQL (Supabase, Neon, or Vercel Postgres).
-- **Environment Variables**: Set `JWT_SECRET` in Vercel dashboard
-- **Prisma**: Migrations run automatically during deployment
+> **Note on serverless (e.g. Vercel):** the Neo4j driver holds a long-lived
+> connection pool, which doesn't map cleanly onto short-lived serverless
+> functions. A long-running host (Render, Railway, Fly.io, a container, etc.) is
+> a better fit for this server.
 
 ## Security Considerations
 
 - Change `JWT_SECRET` to a strong random value (min 32 characters)
-- Use HTTPS only in production
+- Never commit real `.env` values; only `.env.example` is tracked
+- Use HTTPS / `neo4j+s://` (encrypted Bolt) in production
 - Implement rate limiting for authentication endpoints
 - Add input validation and sanitization
-- Use environment variables for sensitive data
 - Consider adding refresh tokens for longer sessions
 
 ## Future Enhancements
@@ -275,35 +274,27 @@ vercel
 - [ ] Rate limiting
 - [ ] Logging and monitoring
 - [ ] Unit and integration tests
-- [ ] Migrate to PostgreSQL for production
+- [ ] Model relationships between nodes (the reason for choosing a graph DB)
 - [ ] Add CI/CD pipeline
 
 ## Troubleshooting
 
-### `ERR_PNPM_IGNORED_BUILDS` / Prisma client not found
-- pnpm 10+ blocks dependency build scripts by default, so the Prisma client is
-  never generated. Run `pnpm approve-builds` (select all), then `pnpm install`.
-  See step 3 of [Setup](#setup).
-
 ### `pnpm: command not found`
 - Enable it via Corepack: `corepack enable pnpm` (ships with Node 18+).
 
-### Database Connection Issues
-- Ensure `DATABASE_URL` is set correctly in `.env`
-- Check that `dev.db` file exists in project root
-- Run `pnpm exec prisma migrate dev` to create the schema
+### `Failed to start server` / connection refused
+- Make sure Neo4j is running: `docker ps` should list `kilimo-neo4j`.
+- Check `NEO4J_URI`, `NEO4J_USER`, and `NEO4J_PASSWORD` in `.env` match how the
+  database was started.
+- For Aura, the URI must use the `neo4j+s://` scheme.
 
-### JWT Token Errors
-- Verify `JWT_SECRET` is set in environment
-- Check that the token is sent in the `Authorization: Bearer <token>` header
-- Ensure the token hasn't expired. Note: tokens are currently signed with a
-  hard-coded 24h expiry in `AuthService.ts`; the `JWT_EXPIRY` env var is not yet
-  wired up.
+### `Neo.ClientError.Security.Unauthorized`
+- The username/password in `.env` don't match the database. For the Docker
+  container, they're set by the `NEO4J_AUTH=neo4j/<password>` flag.
 
 ### Build Errors
 - Run `pnpm install` to ensure all dependencies are installed
-- Run `pnpm exec prisma generate` to generate the Prisma client
-- Check that all imports use `.js` extensions in compiled code
+- Check that all relative imports use `.js` extensions (required for the compiled output)
 
 ## License
 

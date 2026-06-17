@@ -33,14 +33,16 @@ export async function verifyConnection(): Promise<void> {
 export async function initSchema(): Promise<void> {
   const session = getDriver().session();
   try {
-    const constraints = [
+    const statements = [
       'CREATE CONSTRAINT user_email_unique IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE',
       'CREATE CONSTRAINT user_id_unique IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE',
+      // Speeds up verifyEmail's lookup by the pending token hash.
+      'CREATE INDEX user_verification_token IF NOT EXISTS FOR (u:User) ON (u.verificationTokenHash)',
       ...domainConstraints,
     ];
 
-    for (const constraint of constraints) {
-      await session.run(constraint);
+    for (const statement of statements) {
+      await session.run(statement);
     }
   } finally {
     await session.close();

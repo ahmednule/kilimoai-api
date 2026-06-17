@@ -14,7 +14,9 @@ Express + Apollo GraphQL server backed by a Neo4j graph database.
 3. [Configuration](./configuration.md) — every environment variable explained.
 4. [GraphQL API](./graphql-api.md) — the available queries and mutations, with
    examples and authentication details.
-5. [Troubleshooting](./troubleshooting.md) — common errors and how to fix them.
+5. [Authentication](./authentication.md) — JWT auth, the email-verification
+   flow, security properties, and how to test it (incl. the no-SMTP fallback).
+6. [Troubleshooting](./troubleshooting.md) — common errors and how to fix them.
 
 ## At a glance
 

@@ -22,6 +22,13 @@ cp .env.example .env
 | `FEATHERLESS_API_KEY`  | no | —                                       | Featherless API key for LLM match explanations. **Unset → template fallback** (no LLM call). |
 | `FEATHERLESS_MODEL`    | no | `CohereForAI/aya-expanse-8b`            | Hosted model id. Use a multilingual model for good Swahili output.         |
 | `FEATHERLESS_BASE_URL` | no | `https://api.featherless.ai/v1`         | OpenAI-compatible base URL for the chat completions endpoint.              |
+| `APP_URL`        | no       | `http://localhost:4000`                 | Base URL used to build links in emails (e.g. the verification link).       |
+| `SMTP_HOST`      | no       | —                                       | SMTP server host. **Unset → verification links are logged to the console** instead of sent. |
+| `SMTP_PORT`      | no       | `587`                                   | SMTP port. Use `465` with `SMTP_SECURE=true`.                              |
+| `SMTP_SECURE`    | no       | `false`                                 | `true` for implicit TLS (port 465); `false` uses STARTTLS.                 |
+| `SMTP_USER`      | no       | —                                       | SMTP username (omit for unauthenticated relays).                           |
+| `SMTP_PASS`      | no       | —                                       | SMTP password.                                                             |
+| `EMAIL_FROM`     | no       | `Kilimo AI <no-reply@kilimo.ai>`        | `From` address on outgoing email.                                          |
 
 > The "Default" column shows the value the app falls back to if the variable is
 > unset. The shipped `.env.example` provides safe development starting points,

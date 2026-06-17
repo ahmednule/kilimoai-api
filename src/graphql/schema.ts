@@ -5,6 +5,7 @@ export const typeDefs = gql`
     id: ID!
     email: String!
     name: String!
+    emailVerified: Boolean!
     createdAt: String!
     updatedAt: String!
   }
@@ -12,6 +13,12 @@ export const typeDefs = gql`
   type AuthPayload {
     token: String!
     user: User!
+  }
+
+  "Result of an action that does not issue a session (e.g. signup, resend)."
+  type AuthResult {
+    success: Boolean!
+    message: String!
   }
 
   # --- Domain: farmers, lenders, loan products, and matching (PRD §6, §9) ---
@@ -116,8 +123,14 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    signup(email: String!, password: String!, name: String!): AuthPayload!
+    "Register a user (unverified) and email a verification link. Does not issue a token."
+    signup(email: String!, password: String!, name: String!): AuthResult!
+    "Authenticate a verified user and return a JWT."
     login(email: String!, password: String!): AuthPayload!
+    "Confirm an email-verification token and log the user in."
+    verifyEmail(token: String!): AuthPayload!
+    "Re-send the email-verification link. Always returns a generic result."
+    resendVerification(email: String!): AuthResult!
 
     "Capture a farmer's profile (farmer-facing onboarding) so they can be matched."
     onboardFarmer(input: OnboardFarmerInput!): Farmer!

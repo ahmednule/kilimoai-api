@@ -16,14 +16,13 @@ type User {
   id: ID!
   email: String!
   name: String!
+  emailVerified: Boolean!
   createdAt: String!
   updatedAt: String!
 }
 
-type AuthPayload {
-  token: String!
-  user: User!
-}
+type AuthPayload { token: String!  user: User! }
+type AuthResult { success: Boolean!  message: String! }
 
 type Query {
   me: User           # current authenticated user
@@ -31,8 +30,10 @@ type Query {
 }
 
 type Mutation {
-  signup(email: String!, password: String!, name: String!): AuthPayload!
+  signup(email: String!, password: String!, name: String!): AuthResult!
   login(email: String!, password: String!): AuthPayload!
+  verifyEmail(token: String!): AuthPayload!
+  resendVerification(email: String!): AuthResult!
 }
 ```
 
@@ -40,8 +41,12 @@ The `password` field is **never** exposed through the API.
 
 ## Authentication
 
-`signup` and `login` return a JWT `token`. Send it on subsequent requests in
-the `Authorization` header:
+Accounts require **email verification** before they can log in. The full flow,
+security properties, and a step-by-step testing walk-through (including the
+no-SMTP console fallback) live in **[Authentication](./authentication.md)**.
+
+In short: `signup` emails a verification link and returns no token; `verifyEmail`
+and `login` return a JWT `token`. Send it on subsequent requests:
 
 ```
 Authorization: Bearer <token>
@@ -56,33 +61,61 @@ the request context. Queries that require a user (`me`, `user`) throw
 
 ### `signup`
 
-Creates a user and returns a token.
+Registers a user in an unverified state and emails a verification link. Returns
+a generic `AuthResult` — **no token** until the email is verified.
 
 ```graphql
 mutation {
-  signup(email: "user@example.com", password: "password123", name: "John Doe") {
-    token
-    user { id email name }
+  signup(email: "user@example.com", password: "supersecret123", name: "John Doe") {
+    success
+    message
   }
 }
 ```
 
-Errors: `User with this email already exists`.
+Errors: `Please provide a valid email address`, `Name is required`,
+`Password must be at least 8 characters`.
+
+### `verifyEmail`
+
+Confirms a verification token and logs the user in.
+
+```graphql
+mutation {
+  verifyEmail(token: "<token from the email link>") {
+    token
+    user { id email emailVerified }
+  }
+}
+```
+
+Errors: `Invalid or expired verification link`.
 
 ### `login`
 
-Authenticates an existing user.
+Authenticates a **verified** user.
 
 ```graphql
 mutation {
-  login(email: "user@example.com", password: "password123") {
+  login(email: "user@example.com", password: "supersecret123") {
     token
-    user { id email name }
+    user { id email name emailVerified }
   }
 }
 ```
 
-Errors: `User not found`, `Invalid password`.
+Errors: `Invalid email or password` (generic, by design),
+`Email not verified. Check your inbox or request a new verification link.`
+
+### `resendVerification`
+
+Re-sends the verification link. Always returns a generic `AuthResult`.
+
+```graphql
+mutation {
+  resendVerification(email: "user@example.com") { success message }
+}
+```
 
 ## Queries
 
@@ -114,12 +147,12 @@ Errors: `Unauthorized` (no/invalid token), `User not found`.
 
 ## Examples with `curl`
 
-Sign up:
+Sign up (see [Authentication](./authentication.md) for the full verify-then-login flow):
 
 ```bash
 curl -X POST http://localhost:4000/graphql \
   -H 'Content-Type: application/json' \
-  -d '{"query":"mutation { signup(email:\"dev@kilimo.ai\", password:\"secret123\", name:\"Dev\") { token user { id } } }"}'
+  -d '{"query":"mutation { signup(email:\"dev@kilimo.ai\", password:\"supersecret123\", name:\"Dev\") { success message } }"}'
 ```
 
 Authenticated request:

@@ -10,9 +10,17 @@ import { authMiddleware } from './middleware/auth.js';
 import type { AuthRequest } from './middleware/auth.js';
 import type { GraphQLContext } from './types/index.js';
 import { verifyConnection, initSchema, closeDriver } from './db/neo4j.js';
+import { authService } from './services/container.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+/** Minimal HTML escaping for values interpolated into the verification page. */
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string),
+  );
+}
 
 // Middleware
 app.use(cors());
@@ -22,6 +30,25 @@ app.use(authMiddleware);
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Email-verification link handler. The link emailed to users points here, so
+// the flow works without a frontend; it returns a small confirmation page.
+app.get('/verify-email', async (req, res) => {
+  const token = typeof req.query.token === 'string' ? req.query.token : '';
+  try {
+    const { user } = await authService.verifyEmail(token);
+    res
+      .status(200)
+      .send(
+        `<h1>Email verified ✅</h1><p>Thanks, ${escapeHtml(user.name)}. Your Kilimo AI ` +
+          `account (${escapeHtml(user.email)}) is now active. You can close this tab and log in.</p>`,
+      );
+  } catch (err) {
+    res
+      .status(400)
+      .send(`<h1>Verification failed</h1><p>${escapeHtml((err as Error).message)}</p>`);
+  }
 });
 
 // Root endpoint

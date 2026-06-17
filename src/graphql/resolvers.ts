@@ -1,9 +1,9 @@
-import { getDriver } from '../db/neo4j.js';
-import { AuthService } from '../services/AuthService.js';
-import { FarmerService } from '../services/FarmerService.js';
-import { MatchingService } from '../services/MatchingService.js';
-import { ExplanationService } from '../services/ExplanationService.js';
-import { FeatherlessClient, featherlessConfigFromEnv } from '../services/llm/FeatherlessClient.js';
+import {
+  authService,
+  farmerService,
+  matchingService,
+  explanationService,
+} from '../services/container.js';
 import {
   GraphQLContext,
   SignupInput,
@@ -12,16 +12,6 @@ import {
   LoanProduct,
   ProductMatch,
 } from '../types/index.js';
-
-const driver = getDriver();
-const authService = new AuthService(driver);
-const farmerService = new FarmerService(driver);
-const matchingService = new MatchingService(driver);
-
-const featherlessConfig = featherlessConfigFromEnv();
-const explanationService = new ExplanationService(
-  featherlessConfig ? new FeatherlessClient(featherlessConfig) : null,
-);
 
 export const resolvers = {
   Query: {
@@ -85,6 +75,14 @@ export const resolvers = {
         password: args.password,
       };
       return authService.login(input);
+    },
+
+    async verifyEmail(_: unknown, args: { token: string }) {
+      return authService.verifyEmail(args.token);
+    },
+
+    async resendVerification(_: unknown, args: { email: string }) {
+      return authService.resendVerification(args.email);
     },
 
     async onboardFarmer(_: unknown, args: { input: OnboardFarmerInput }) {

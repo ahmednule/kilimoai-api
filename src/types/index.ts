@@ -4,6 +4,12 @@ export interface User {
   email: string;
   name: string;
   password: string;
+  /** Whether the user has confirmed ownership of their email address. */
+  emailVerified: boolean;
+  /** SHA-256 hash of the pending email-verification token (null once used). */
+  verificationTokenHash?: string | null;
+  /** ISO 8601 expiry of the pending verification token (null once used). */
+  verificationTokenExpiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -12,6 +18,7 @@ export interface UserResponse {
   id: string;
   email: string;
   name: string;
+  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,6 +26,12 @@ export interface UserResponse {
 export interface AuthPayload {
   token: string;
   user: UserResponse;
+}
+
+/** Result of an action that does not (yet) issue a session, e.g. signup. */
+export interface AuthResult {
+  success: boolean;
+  message: string;
 }
 
 export interface SignupInput {

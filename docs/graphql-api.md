@@ -129,6 +129,27 @@ query {
 }
 ```
 
+### `farmersForProduct(productId)` (auth required)
+
+Loan-officer view — the reverse of `farmerMatches`. Returns the farmers who
+(nearly) qualify for a given product, ranked by fit.
+
+```graphql
+query {
+  farmersForProduct(productId: "faulu-maize-cycle", includeNearMisses: true, limit: 25) {
+    qualifies
+    fitScore
+    farmer { name region crops }
+    reasons { dimension matched }
+    gaps { dimension required }
+    hasRepaymentHistory
+    lenderInRegion
+  }
+}
+```
+
+Errors: `Unauthorized` (no/invalid token), `Loan product not found: <id>`.
+
 ### `user(id)` (auth required)
 
 Looks up any user by id.

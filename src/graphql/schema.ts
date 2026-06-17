@@ -98,6 +98,18 @@ export const typeDefs = gql`
     explanation(language: String): MatchExplanation!
   }
 
+  "The reverse of ProductMatch: a farmer evaluated against a loan product (loan-officer view)."
+  type FarmerMatch {
+    farmer: Farmer!
+    qualifies: Boolean!
+    "Higher is a better fit; used for ranking."
+    fitScore: Int!
+    reasons: [MatchReason!]!
+    gaps: [MatchGap!]!
+    hasRepaymentHistory: Boolean!
+    lenderInRegion: Boolean!
+  }
+
   input OnboardFarmerInput {
     name: String!
     farmSize: Float!
@@ -120,6 +132,9 @@ export const typeDefs = gql`
     farmerMatches(farmerId: ID!, includeNearMisses: Boolean, limit: Int): [ProductMatch!]!
     loanProducts: [LoanProduct!]!
     loanProduct(id: ID!): LoanProduct
+
+    "Loan-officer view: farmers who (nearly) qualify for a product, ranked by fit. Requires auth."
+    farmersForProduct(productId: ID!, includeNearMisses: Boolean, limit: Int): [FarmerMatch!]!
   }
 
   type Mutation {

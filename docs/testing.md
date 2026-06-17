@@ -160,6 +160,26 @@ Browse the catalogue:
 query { loanProducts { name minAmount maxAmount interestRate term lender { name } } }
 ```
 
+### Loan-officer view (auth required)
+
+The reverse of matching — which farmers fit a given product. Needs an
+`Authorization: Bearer <token>` header (any verified user; see the auth flow
+above):
+
+```graphql
+query {
+  farmersForProduct(productId: "faulu-maize-cycle", limit: 25) {
+    qualifies
+    fitScore
+    farmer { name region crops }
+    reasons { dimension matched }
+    gaps { dimension required }
+    hasRepaymentHistory
+    lenderInRegion
+  }
+}
+```
+
 ---
 
 ## 3. Terminal alternative (no browser)

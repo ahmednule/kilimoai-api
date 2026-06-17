@@ -51,6 +51,21 @@ export const resolvers = {
     async loanProduct(_: unknown, args: { id: string }) {
       return farmerService.getLoanProductById(args.id);
     },
+
+    // Loan-officer view — requires authentication (lenders sign in; PRD §5, §7).
+    async farmersForProduct(
+      _: unknown,
+      args: { productId: string; includeNearMisses?: boolean; limit?: number },
+      context: GraphQLContext,
+    ) {
+      if (!context.userId) {
+        throw new Error('Unauthorized');
+      }
+      return matchingService.farmersForProduct(args.productId, {
+        includeNearMisses: args.includeNearMisses ?? true,
+        limit: args.limit ?? 25,
+      });
+    },
   },
 
   Mutation: {

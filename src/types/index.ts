@@ -178,6 +178,22 @@ export interface MatchExplanation {
   generatedBy: string;
 }
 
+/**
+ * The reverse of ProductMatch: one farmer evaluated against a given loan
+ * product, for the loan-officer discovery view (see docs/PRD.md §6 step 7).
+ */
+export interface FarmerMatch {
+  farmer: FarmerWithRelations;
+  qualifies: boolean;
+  fitScore: number;
+  reasons: MatchReason[];
+  gaps: MatchGap[];
+  /** The farmer has repaid at least one prior loan (a trust signal). */
+  hasRepaymentHistory: boolean;
+  /** The product's lender operates in the farmer's region. */
+  lenderInRegion: boolean;
+}
+
 export interface GraphQLContext {
   userId?: string;
   user?: User;

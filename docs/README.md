@@ -16,7 +16,9 @@ Express + Apollo GraphQL server backed by a Neo4j graph database.
    examples and authentication details.
 5. [Authentication](./authentication.md) — JWT auth, the email-verification
    flow, security properties, and how to test it (incl. the no-SMTP fallback).
-6. [Troubleshooting](./troubleshooting.md) — common errors and how to fix them.
+6. [Testing & Viewing Data](./testing.md) — exercise the API in Apollo Sandbox
+   and inspect the graph in Neo4j Browser, with copy-paste queries.
+7. [Troubleshooting](./troubleshooting.md) — common errors and how to fix them.
 
 ## At a glance
 

@@ -1,4 +1,5 @@
 import neo4j, { Driver } from 'neo4j-driver';
+import { domainConstraints } from '../domain/schema.js';
 
 let driver: Driver | null = null;
 
@@ -24,18 +25,23 @@ export async function verifyConnection(): Promise<void> {
 }
 
 /**
- * Ensures the constraints the app relies on exist. The unique constraint on
- * User.email also creates an index, so lookups by email stay fast.
+ * Ensures the constraints the app relies on exist: the auth `User` constraints
+ * plus every domain-graph constraint (see src/domain/schema.ts). Unique
+ * constraints also create indexes, so lookups stay fast. All statements are
+ * idempotent (`IF NOT EXISTS`), so this is safe to run on every startup.
  */
 export async function initSchema(): Promise<void> {
   const session = getDriver().session();
   try {
-    await session.run(
-      'CREATE CONSTRAINT user_email_unique IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE'
-    );
-    await session.run(
-      'CREATE CONSTRAINT user_id_unique IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE'
-    );
+    const constraints = [
+      'CREATE CONSTRAINT user_email_unique IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE',
+      'CREATE CONSTRAINT user_id_unique IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE',
+      ...domainConstraints,
+    ];
+
+    for (const constraint of constraints) {
+      await session.run(constraint);
+    }
   } finally {
     await session.close();
   }

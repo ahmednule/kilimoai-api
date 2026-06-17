@@ -2,18 +2,26 @@ import { getDriver } from '../db/neo4j.js';
 import { AuthService } from '../services/AuthService.js';
 import { FarmerService } from '../services/FarmerService.js';
 import { MatchingService } from '../services/MatchingService.js';
+import { ExplanationService } from '../services/ExplanationService.js';
+import { FeatherlessClient, featherlessConfigFromEnv } from '../services/llm/FeatherlessClient.js';
 import {
   GraphQLContext,
   SignupInput,
   LoginInput,
   OnboardFarmerInput,
   LoanProduct,
+  ProductMatch,
 } from '../types/index.js';
 
 const driver = getDriver();
 const authService = new AuthService(driver);
 const farmerService = new FarmerService(driver);
 const matchingService = new MatchingService(driver);
+
+const featherlessConfig = featherlessConfigFromEnv();
+const explanationService = new ExplanationService(
+  featherlessConfig ? new FeatherlessClient(featherlessConfig) : null,
+);
 
 export const resolvers = {
   Query: {
@@ -89,6 +97,14 @@ export const resolvers = {
   LoanProduct: {
     async lender(product: LoanProduct) {
       return farmerService.getLenderForProduct(product.id);
+    },
+  },
+
+  // Field resolver: explanations are generated on demand (one LLM call each),
+  // so clients only pay for the matches they choose to explain.
+  ProductMatch: {
+    async explanation(match: ProductMatch, args: { language?: string }) {
+      return explanationService.explainMatch(match, args.language ?? 'en');
     },
   },
 };

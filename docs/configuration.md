@@ -19,6 +19,9 @@ cp .env.example .env
 | `JWT_EXPIRY`     | no       | `24h`                                   | Token lifetime. Accepts `zeit/ms` strings like `7d`, `12h`, `30m`.         |
 | `NODE_ENV`       | no       | —                                       | `development` or `production`.                                              |
 | `PORT`           | no       | `4000`                                  | HTTP port the server listens on.                                           |
+| `FEATHERLESS_API_KEY`  | no | —                                       | Featherless API key for LLM match explanations. **Unset → template fallback** (no LLM call). |
+| `FEATHERLESS_MODEL`    | no | `CohereForAI/aya-expanse-8b`            | Hosted model id. Use a multilingual model for good Swahili output.         |
+| `FEATHERLESS_BASE_URL` | no | `https://api.featherless.ai/v1`         | OpenAI-compatible base URL for the chat completions endpoint.              |
 
 > The "Default" column shows the value the app falls back to if the variable is
 > unset. The shipped `.env.example` provides safe development starting points,

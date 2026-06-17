@@ -156,6 +156,15 @@ export interface ProductMatch {
   lenderInRegion: boolean;
 }
 
+/** A plain-language, graph-grounded explanation of a single product match. */
+export interface MatchExplanation {
+  text: string;
+  /** Language the explanation is written in, e.g. "sw" or "en". */
+  language: string;
+  /** Provenance: "featherless:<model>" when the LLM produced it, else "template". */
+  generatedBy: string;
+}
+
 export interface GraphQLContext {
   userId?: string;
   user?: User;

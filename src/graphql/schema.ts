@@ -66,6 +66,15 @@ export const typeDefs = gql`
     required: [String!]!
   }
 
+  "A plain-language, graph-grounded explanation of a single match."
+  type MatchExplanation {
+    text: String!
+    "Language of the explanation, e.g. \\"sw\\" or \\"en\\"."
+    language: String!
+    "Provenance: \\"featherless:<model>\\" or \\"template\\"."
+    generatedBy: String!
+  }
+
   "A loan product evaluated against a farmer, with the reasons it (nearly) fits."
   type ProductMatch {
     product: LoanProduct!
@@ -78,6 +87,8 @@ export const typeDefs = gql`
     riskCategories: [String!]!
     hasRepaymentHistory: Boolean!
     lenderInRegion: Boolean!
+    "Plain-language explanation (Swahili/English). Generated on demand."
+    explanation(language: String): MatchExplanation!
   }
 
   input OnboardFarmerInput {

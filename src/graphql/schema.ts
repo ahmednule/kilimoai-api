@@ -110,6 +110,41 @@ export const typeDefs = gql`
     lenderInRegion: Boolean!
   }
 
+  "One scheduled repayment, aligned to a harvest cycle."
+  type RepaymentInstallment {
+    "Months after disbursement this payment is due."
+    month: Int!
+    amountDue: Float!
+    label: String!
+  }
+
+  "A repayment projection for a loan, both monthly and harvest-aligned."
+  type RepaymentSimulation {
+    product: LoanProduct!
+    principal: Float!
+    interestRate: Float!
+    termMonths: Int!
+    totalInterest: Float!
+    totalRepayable: Float!
+    monthlyInstallment: Float!
+    harvestsInTerm: Int!
+    harvestInstallment: Float!
+    expectedHarvestRevenue: Float
+    "Whether harvest income covers a harvest installment; null if no revenue given."
+    affordable: Boolean
+    schedule: [RepaymentInstallment!]!
+    summary: String!
+  }
+
+  input RepaymentSimulationInput {
+    productId: ID!
+    principal: Float!
+    "Expected income per harvest, for the affordability check."
+    expectedHarvestRevenue: Float
+    "Harvests per year (defaults to 2: long + short rains)."
+    harvestsPerYear: Int
+  }
+
   input OnboardFarmerInput {
     name: String!
     farmSize: Float!
@@ -135,6 +170,9 @@ export const typeDefs = gql`
 
     "Loan-officer view: farmers who (nearly) qualify for a product, ranked by fit. Requires auth."
     farmersForProduct(productId: ID!, includeNearMisses: Boolean, limit: Int): [FarmerMatch!]!
+
+    "Project repayment for a loan, aligned to harvest cycles."
+    simulateRepayment(input: RepaymentSimulationInput!): RepaymentSimulation!
   }
 
   type Mutation {

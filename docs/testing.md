@@ -160,6 +160,26 @@ Browse the catalogue:
 query { loanProducts { name minAmount maxAmount interestRate term lender { name } } }
 ```
 
+### Repayment simulation
+
+Project repayment aligned to harvest cycles (no auth needed):
+
+```graphql
+query {
+  simulateRepayment(input: {
+    productId: "equity-kilimo-biashara", principal: 100000,
+    expectedHarvestRevenue: 90000, harvestsPerYear: 2
+  }) {
+    totalRepayable
+    harvestsInTerm
+    harvestInstallment
+    affordable
+    schedule { month amountDue label }
+    summary
+  }
+}
+```
+
 ### Loan-officer view (auth required)
 
 The reverse of matching — which farmers fit a given product. Needs an

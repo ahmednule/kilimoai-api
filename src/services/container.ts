@@ -9,6 +9,7 @@ import { EmailService } from './EmailService.js';
 import { FarmerService } from './FarmerService.js';
 import { MatchingService } from './MatchingService.js';
 import { ExplanationService } from './ExplanationService.js';
+import { RepaymentService } from './RepaymentService.js';
 import { FeatherlessClient, featherlessConfigFromEnv } from './llm/FeatherlessClient.js';
 
 const driver = getDriver();
@@ -18,6 +19,7 @@ export const emailService = new EmailService();
 export const authService = new AuthService(driver, emailService);
 export const farmerService = new FarmerService(driver);
 export const matchingService = new MatchingService(driver);
+export const repaymentService = new RepaymentService();
 export const explanationService = new ExplanationService(
   featherlessConfig ? new FeatherlessClient(featherlessConfig) : null,
 );

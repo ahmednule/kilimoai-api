@@ -129,6 +129,34 @@ query {
 }
 ```
 
+### `simulateRepayment(input)`
+
+Projects repayment for a loan, aligned to harvest cycles (smallholders repay
+from harvest lump sums, not monthly). Interest is modelled as a flat rate.
+
+```graphql
+query {
+  simulateRepayment(input: {
+    productId: "equity-kilimo-biashara",
+    principal: 100000,
+    expectedHarvestRevenue: 90000,
+    harvestsPerYear: 2
+  }) {
+    totalInterest
+    totalRepayable
+    monthlyInstallment
+    harvestsInTerm
+    harvestInstallment
+    affordable
+    schedule { month amountDue label }
+    summary
+  }
+}
+```
+
+Errors: `Loan product not found: <id>`,
+`Principal must be between KES <min> and KES <max> for <product>`.
+
 ### `farmersForProduct(productId)` (auth required)
 
 Loan-officer view — the reverse of `farmerMatches`. Returns the farmers who

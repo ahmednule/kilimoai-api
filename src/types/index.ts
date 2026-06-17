@@ -194,6 +194,53 @@ export interface FarmerMatch {
   lenderInRegion: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Repayment simulation (see src/services/RepaymentService.ts, PRD FR5).
+// ---------------------------------------------------------------------------
+
+export interface RepaymentSimulationInput {
+  productId: string;
+  /** Amount to borrow (must be within the product's min/max). */
+  principal: number;
+  /** Expected income per harvest, for the affordability check. Optional. */
+  expectedHarvestRevenue?: number;
+  /** Harvests per year (Kenya typically 2: long + short rains). Defaults to 2. */
+  harvestsPerYear?: number;
+}
+
+/** One scheduled repayment, aligned to a harvest cycle. */
+export interface RepaymentInstallment {
+  /** Months after disbursement that this payment falls due. */
+  month: number;
+  amountDue: number;
+  /** Human label, e.g. "Harvest 1". */
+  label: string;
+}
+
+export interface RepaymentSimulation {
+  product: LoanProduct;
+  principal: number;
+  /** Annual interest rate as a percentage. */
+  interestRate: number;
+  termMonths: number;
+  totalInterest: number;
+  totalRepayable: number;
+  /** Even monthly repayment over the term. */
+  monthlyInstallment: number;
+  /** Number of harvest cycles that fall within the term. */
+  harvestsInTerm: number;
+  /** Repayment per harvest if paid from harvest income. */
+  harvestInstallment: number;
+  /** Echoed input; null if not provided. */
+  expectedHarvestRevenue: number | null;
+  /** Whether a harvest's income covers a harvest installment; null if no revenue given. */
+  affordable: boolean | null;
+  /** Harvest-aligned repayment schedule. */
+  schedule: RepaymentInstallment[];
+  /** Plain-language summary of the plan. */
+  summary: string;
+}
+
 export interface GraphQLContext {
   userId?: string;
   user?: User;

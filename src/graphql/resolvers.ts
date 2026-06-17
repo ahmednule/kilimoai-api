@@ -3,6 +3,7 @@ import {
   farmerService,
   matchingService,
   explanationService,
+  repaymentService,
 } from '../services/container.js';
 import {
   GraphQLContext,
@@ -11,6 +12,7 @@ import {
   OnboardFarmerInput,
   LoanProduct,
   ProductMatch,
+  RepaymentSimulationInput,
 } from '../types/index.js';
 
 export const resolvers = {
@@ -65,6 +67,14 @@ export const resolvers = {
         includeNearMisses: args.includeNearMisses ?? true,
         limit: args.limit ?? 25,
       });
+    },
+
+    async simulateRepayment(_: unknown, args: { input: RepaymentSimulationInput }) {
+      const product = await farmerService.getLoanProductById(args.input.productId);
+      if (!product) {
+        throw new Error(`Loan product not found: ${args.input.productId}`);
+      }
+      return repaymentService.simulate(product, args.input);
     },
   },
 

@@ -5,6 +5,8 @@ Express + Apollo GraphQL server backed by a Neo4j graph database.
 
 ## Contents
 
+0. [Product Requirements (PRD)](./PRD.md) — what we're building for the Kenya AI
+   Challenge 2026 and why: the vision, scope, data model, sprint plan, and risks.
 1. [Getting Started](./getting-started.md) — the fastest path from a fresh
    clone to a running server.
 2. [Database Setup](./database-setup.md) — running Neo4j with Docker Compose,

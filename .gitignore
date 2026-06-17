@@ -17,3 +17,6 @@ node_modules
 
 # Build output
 dist/
+
+# Local Neo4j data volume
+neo4j-data/

@@ -241,6 +241,37 @@ export interface RepaymentSimulation {
   summary: string;
 }
 
+// ---------------------------------------------------------------------------
+// Loan applications (see src/services/ApplicationService.ts, PRD FR6).
+// ---------------------------------------------------------------------------
+
+export interface ApplyForLoanInput {
+  farmerId: string;
+  productId: string;
+  requestedAmount: number;
+}
+
+/** An Application node as stored in Neo4j. */
+export interface Application {
+  id: string;
+  referenceNumber: string;
+  status: string;
+  requestedAmount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A loan application assembled with its farmer, product, eligibility and document. */
+export interface LoanApplication extends Application {
+  farmer: FarmerWithRelations;
+  product: LoanProduct;
+  lender: Lender;
+  /** Whether the farmer currently qualifies for the product (from matching). */
+  qualifies: boolean;
+  /** Pre-filled, ready-to-submit application document (plain text). */
+  document: string;
+}
+
 export interface GraphQLContext {
   userId?: string;
   user?: User;

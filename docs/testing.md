@@ -160,6 +160,25 @@ Browse the catalogue:
 query { loanProducts { name minAmount maxAmount interestRate term lender { name } } }
 ```
 
+### Apply for a loan
+
+Initiate an application and get the pre-filled document back (no auth needed):
+
+```graphql
+mutation {
+  applyForLoan(input: {
+    farmerId: "farmer-amina", productId: "jk-input-loan", requestedAmount: 50000
+  }) {
+    referenceNumber status qualifies document
+  }
+}
+```
+
+```graphql
+# A farmer's applications, newest first:
+query { farmerApplications(farmerId: "farmer-amina") { referenceNumber status product { name } } }
+```
+
 ### Repayment simulation
 
 Project repayment aligned to harvest cycles (no auth needed):

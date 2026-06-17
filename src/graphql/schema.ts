@@ -145,6 +145,30 @@ export const typeDefs = gql`
     harvestsPerYear: Int
   }
 
+  "A pre-filled loan application linking a farmer to a product."
+  type LoanApplication {
+    id: ID!
+    referenceNumber: String!
+    "DRAFT | SUBMITTED"
+    status: String!
+    requestedAmount: Float!
+    createdAt: String!
+    updatedAt: String!
+    farmer: Farmer!
+    product: LoanProduct!
+    lender: Lender!
+    "Whether the farmer currently qualifies for the product."
+    qualifies: Boolean!
+    "Pre-filled, ready-to-submit application document (plain text)."
+    document: String!
+  }
+
+  input ApplyForLoanInput {
+    farmerId: ID!
+    productId: ID!
+    requestedAmount: Float!
+  }
+
   input OnboardFarmerInput {
     name: String!
     farmSize: Float!
@@ -173,6 +197,11 @@ export const typeDefs = gql`
 
     "Project repayment for a loan, aligned to harvest cycles."
     simulateRepayment(input: RepaymentSimulationInput!): RepaymentSimulation!
+
+    "Fetch a single loan application by id."
+    loanApplication(id: ID!): LoanApplication
+    "List a farmer's loan applications, newest first."
+    farmerApplications(farmerId: ID!): [LoanApplication!]!
   }
 
   type Mutation {
@@ -187,5 +216,8 @@ export const typeDefs = gql`
 
     "Capture a farmer's profile (farmer-facing onboarding) so they can be matched."
     onboardFarmer(input: OnboardFarmerInput!): Farmer!
+
+    "Initiate a loan application: pre-fills and submits it, returning a ready document."
+    applyForLoan(input: ApplyForLoanInput!): LoanApplication!
   }
 `;

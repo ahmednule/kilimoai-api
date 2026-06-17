@@ -117,6 +117,31 @@ mutation {
 }
 ```
 
+### `applyForLoan(input)`
+
+Initiates a loan application: links the farmer to the product, captures the
+requested amount, and returns a pre-filled, ready-to-submit `document` plus the
+current eligibility. Accepted even if the farmer does not fully qualify
+(decision support — the lender reviews). Read applications back with the
+`loanApplication(id)` and `farmerApplications(farmerId)` queries.
+
+```graphql
+mutation {
+  applyForLoan(input: {
+    farmerId: "farmer-amina", productId: "jk-input-loan", requestedAmount: 50000
+  }) {
+    referenceNumber
+    status
+    qualifies
+    lender { name }
+    document
+  }
+}
+```
+
+Errors: `Farmer not found: <id>`, `Loan product not found: <id>`,
+`Requested amount must be between KES <min> and KES <max> for <product>`.
+
 ## Queries
 
 ### `me` (auth required)

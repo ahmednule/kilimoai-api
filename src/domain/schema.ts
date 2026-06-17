@@ -18,6 +18,7 @@ export const NodeLabel = {
   LoanProduct: 'LoanProduct',
   Lender: 'Lender',
   RiskCategory: 'RiskCategory',
+  Application: 'Application',
 } as const;
 
 export type NodeLabel = (typeof NodeLabel)[keyof typeof NodeLabel];
@@ -38,6 +39,10 @@ export const RelType = {
   QUALIFIES_FOR: 'QUALIFIES_FOR',
   /** (:Lender)-[:OPERATES_IN]->(:Region) */
   OPERATES_IN: 'OPERATES_IN',
+  /** (:Farmer)-[:SUBMITTED]->(:Application) */
+  SUBMITTED: 'SUBMITTED',
+  /** (:Application)-[:FOR_PRODUCT]->(:LoanProduct) */
+  FOR_PRODUCT: 'FOR_PRODUCT',
 } as const;
 
 export type RelType = (typeof RelType)[keyof typeof RelType];
@@ -59,6 +64,7 @@ export const domainConstraints: readonly string[] = [
   `CREATE CONSTRAINT farmer_id_unique IF NOT EXISTS FOR (f:${NodeLabel.Farmer}) REQUIRE f.id IS UNIQUE`,
   `CREATE CONSTRAINT loan_product_id_unique IF NOT EXISTS FOR (p:${NodeLabel.LoanProduct}) REQUIRE p.id IS UNIQUE`,
   `CREATE CONSTRAINT lender_id_unique IF NOT EXISTS FOR (l:${NodeLabel.Lender}) REQUIRE l.id IS UNIQUE`,
+  `CREATE CONSTRAINT application_id_unique IF NOT EXISTS FOR (a:${NodeLabel.Application}) REQUIRE a.id IS UNIQUE`,
 
   // Reference (name-keyed) nodes — enable idempotent MERGE by name
   `CREATE CONSTRAINT crop_name_unique IF NOT EXISTS FOR (c:${NodeLabel.Crop}) REQUIRE c.name IS UNIQUE`,

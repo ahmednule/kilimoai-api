@@ -10,6 +10,7 @@ import { FarmerService } from './FarmerService.js';
 import { MatchingService } from './MatchingService.js';
 import { ExplanationService } from './ExplanationService.js';
 import { RepaymentService } from './RepaymentService.js';
+import { ApplicationService } from './ApplicationService.js';
 import { FeatherlessClient, featherlessConfigFromEnv } from './llm/FeatherlessClient.js';
 
 const driver = getDriver();
@@ -22,4 +23,10 @@ export const matchingService = new MatchingService(driver);
 export const repaymentService = new RepaymentService();
 export const explanationService = new ExplanationService(
   featherlessConfig ? new FeatherlessClient(featherlessConfig) : null,
+);
+export const applicationService = new ApplicationService(
+  driver,
+  farmerService,
+  matchingService,
+  repaymentService,
 );

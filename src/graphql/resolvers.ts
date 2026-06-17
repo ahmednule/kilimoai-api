@@ -4,6 +4,7 @@ import {
   matchingService,
   explanationService,
   repaymentService,
+  applicationService,
 } from '../services/container.js';
 import {
   GraphQLContext,
@@ -13,6 +14,7 @@ import {
   LoanProduct,
   ProductMatch,
   RepaymentSimulationInput,
+  ApplyForLoanInput,
 } from '../types/index.js';
 
 export const resolvers = {
@@ -76,6 +78,14 @@ export const resolvers = {
       }
       return repaymentService.simulate(product, args.input);
     },
+
+    async loanApplication(_: unknown, args: { id: string }) {
+      return applicationService.getApplicationById(args.id);
+    },
+
+    async farmerApplications(_: unknown, args: { farmerId: string }) {
+      return applicationService.listForFarmer(args.farmerId);
+    },
   },
 
   Mutation: {
@@ -112,6 +122,10 @@ export const resolvers = {
 
     async onboardFarmer(_: unknown, args: { input: OnboardFarmerInput }) {
       return farmerService.onboardFarmer(args.input);
+    },
+
+    async applyForLoan(_: unknown, args: { input: ApplyForLoanInput }) {
+      return applicationService.apply(args.input);
     },
   },
 

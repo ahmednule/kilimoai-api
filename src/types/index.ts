@@ -54,6 +54,26 @@ export interface Farmer {
   updatedAt: string;
 }
 
+/** A farmer plus its graph relationships, flattened for the GraphQL layer. */
+export interface FarmerWithRelations extends Farmer {
+  crops: string[];
+  /** The farmer's region (LOCATED_IN); null if none recorded. */
+  region: string | null;
+  seasons: string[];
+}
+
+/** Input for onboarding a farmer through the conversational flow. */
+export interface OnboardFarmerInput {
+  name: string;
+  farmSize: number;
+  location: string;
+  financialHistory?: string;
+  language?: string;
+  crops: string[];
+  region: string;
+  seasons: string[];
+}
+
 /** A crop a farmer grows; reference node keyed by name. */
 export interface Crop {
   name: string;

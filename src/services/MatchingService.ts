@@ -1,5 +1,6 @@
 import { Driver } from 'neo4j-driver';
-import { LoanProduct, Lender, ProductMatch, MatchReason, MatchGap } from '../types/index.js';
+import { Lender, ProductMatch, MatchReason, MatchGap } from '../types/index.js';
+import { toNumber, normaliseProduct } from '../db/mappers.js';
 
 /**
  * Traverses the domain graph to find the loan products a farmer qualifies for,
@@ -53,7 +54,6 @@ export class MatchingService {
   }
 
   private toProductMatch(rec: any): ProductMatch {
-    const product = rec.get('product').properties as LoanProduct;
     const lender = rec.get('lender').properties as Lender;
 
     const matchedCrops = rec.get('matchedCrops') as string[];
@@ -76,15 +76,8 @@ export class MatchingService {
     if (!regionOk && reqRegions.length) gaps.push({ dimension: 'region', required: reqRegions });
     if (!seasonOk && reqSeasons.length) gaps.push({ dimension: 'season', required: reqSeasons });
 
-    // Numeric props come back as neo4j Integers for ints; normalise to JS numbers.
     return {
-      product: {
-        ...product,
-        minAmount: toNumber(product.minAmount),
-        maxAmount: toNumber(product.maxAmount),
-        interestRate: toNumber(product.interestRate),
-        term: toNumber(product.term),
-      },
+      product: normaliseProduct(rec.get('product').properties),
       lender,
       qualifies: rec.get('qualifies') as boolean,
       fitScore: toNumber(rec.get('fitScore')),
@@ -95,14 +88,6 @@ export class MatchingService {
       lenderInRegion: rec.get('lenderInRegion') as boolean,
     };
   }
-}
-
-/** Coerces neo4j Integer | number into a plain JS number. */
-function toNumber(value: any): number {
-  if (value == null) return value;
-  if (typeof value === 'number') return value;
-  if (typeof value.toNumber === 'function') return value.toNumber();
-  return Number(value);
 }
 
 /**

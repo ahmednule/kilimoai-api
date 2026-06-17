@@ -14,7 +14,10 @@ export const resolvers = {
       return authService.getUserById(context.userId);
     },
 
-    async user(_: unknown, args: { id: string }) {
+    async user(_: unknown, args: { id: string }, context: GraphQLContext) {
+      if (!context.userId) {
+        throw new Error('Unauthorized');
+      }
       return authService.getUserById(args.id);
     },
   },

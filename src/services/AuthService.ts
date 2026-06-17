@@ -97,9 +97,11 @@ export class AuthService {
     }
   }
 
-  async getUserById(id: string) {
+  async getUserById(id: string | number) {
     const user: any = await this.prisma.user.findUnique({
-      where: { id } as any,
+      // User.id is an Int in Prisma, but GraphQL passes ID as a string,
+      // so coerce before querying to avoid a runtime validation error.
+      where: { id: Number(id) } as any,
       select: {
         id: true,
         email: true,

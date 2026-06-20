@@ -18,6 +18,5 @@ node_modules
 # Build output
 dist/
 
-# Local SQLite database
-prisma/dev.db
-prisma/dev.db-journal
+# Local Neo4j data volume
+neo4j-data/
